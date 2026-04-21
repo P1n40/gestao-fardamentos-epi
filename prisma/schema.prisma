@@ -1,0 +1,258 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Category {
+  UNIFORM
+  PPE // EPI
+}
+
+enum UserRole {
+  ADMIN
+  RH_ALMOXARIFADO
+  GESTOR
+  OPERADOR
+}
+
+enum AssignmentStatus {
+  PENDING
+  ISSUED
+  RETURNED
+  EXPIRED
+  CANCELED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String // Hashed password
+  name          String?
+  role          UserRole  @default(OPERADOR)
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  auditLogs     AuditLog[]
+  deliveries    Delivery[]
+}
+
+model Position {
+  id              String         @id @default(cuid())
+  name            String         @unique
+  description     String?
+  department      String?
+  requiresUniform Boolean        @default(true)
+  requiresPPE     Boolean        @default(false)
+  active          Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  employees       Employee[]
+  kitRevisions    KitRevision[]
+}
+
+model Employee {
+  id               String       @id @default(cuid())
+  name             String
+  documentId       String       @unique // CPF
+  registrationCode String?      @unique // Matrícula
+  department       String?      // Secretaria / Setor
+  positionId       String
+  position         Position     @relation(fields: [positionId], references: [id])
+  
+  // Sizing data
+  shirtSize        String?
+  pantsSize        String?
+  shoeSize         String?
+  extraSizing      Json?        // Specialized gear sizes
+
+  assignments      Assignment[]
+  documents        Document[]
+  deliveries       Delivery[]
+  active           Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([positionId])
+  @@index([documentId])
+}
+
+enum StockTransactionType {
+  INPUT
+  OUTPUT
+  ADJUSTMENT
+}
+
+model Material {
+  id           String             @id @default(cuid())
+  name         String
+  description  String?
+  category     Category
+  caNumber     String?            // General/Latest CA for reference
+  unit         String             @default("UN")
+  size         String?            // P, M, G, 40, etc.
+  sku          String?            @unique
+  stock        Int                @default(0)
+  minStock     Int                @default(0)
+  active       Boolean            @default(true)
+  kitItems      KitItem[]
+  assignments   Assignment[]
+  deliveryItems DeliveryItem[]
+  transactions  StockTransaction[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([category])
+}
+
+model StockTransaction {
+  id            String               @id @default(cuid())
+  materialId    String
+  material      Material             @relation(fields: [materialId], references: [id])
+  type          StockTransactionType
+  quantity      Int                  // Delta (+ or -)
+  balanceBefore Int
+  balanceAfter  Int
+  reason        String
+  notes         String?
+  userId        String?
+  createdAt     DateTime             @default(now())
+
+  @@index([materialId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model KitRevision {
+  id           String    @id @default(cuid())
+  positionId   String
+  position     Position  @relation(fields: [positionId], references: [id])
+  version      Int       @default(1)
+  notes        String?
+  isActive     Boolean   @default(true)
+  validFrom    DateTime  @default(now())
+  validTo      DateTime?
+  items        KitItem[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([positionId])
+}
+
+model KitItem {
+  id          String      @id @default(cuid())
+  revisionId  String
+  revision    KitRevision @relation(fields: [revisionId], references: [id])
+  materialId  String
+  material    Material    @relation(fields: [materialId], references: [id])
+  quantity    Int         @default(1)
+  periodDays  Int?        // Replacement cycle in days (null = one-time)
+  mandatory   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([revisionId, materialId])
+}
+
+model Assignment {
+  id             String           @id @default(cuid())
+  employeeId     String
+  employee       Employee         @relation(fields: [employeeId], references: [id])
+  materialId     String
+  material       Material         @relation(fields: [materialId], references: [id])
+  quantity       Int
+  type           Category         // Derived for easier reporting
+  status         AssignmentStatus @default(ISSUED)
+  caNumber       String?          // CA active at time of delivery
+  isReplacement  Boolean          @default(false)
+  issuedAt       DateTime         @default(now())
+  expiresAt      DateTime?        // For PPE/EPI
+  returnedAt     DateTime?
+  receiptUrl     String?          // Deprecated: URL now on Delivery header
+  deliveryItemId String?          @unique
+  deliveryItem   DeliveryItem?    @relation(fields: [deliveryItemId], references: [id])
+
+  @@index([employeeId])
+  @@index([materialId])
+  @@index([status])
+  @@index([type])
+}
+
+model Delivery {
+  id          String         @id @default(cuid())
+  employeeId  String
+  employee    Employee       @relation(fields: [employeeId], references: [id])
+  type        Category       // UNIFORM or PPE
+  userId      String         // Operator who performed the delivery
+  user        User           @relation(fields: [userId], references: [id])
+  issuedAt    DateTime       @default(now())
+  notes       String?
+  receiptUrl  String?        // Link to signed document (Recibo or Ficha)
+  items       DeliveryItem[]
+  document    Document?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([employeeId])
+  @@index([userId])
+  @@index([type])
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  type         Category // UNIFORM (Recibo) or PPE (Ficha)
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id])
+  deliveryId   String?  @unique
+  delivery     Delivery? @relation(fields: [deliveryId], references: [id])
+  version      Int      @default(1)
+  fileKey      String?  // Reference to storage
+  hash         String?  // Integrity hash
+  metadata     Json?    // Snapshot of the items in the document
+  userId       String
+  issuedAt     DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([type])
+}
+
+model DeliveryItem {
+  id            String      @id @default(cuid())
+  deliveryId    String
+  delivery      Delivery    @relation(fields: [deliveryId], references: [id])
+  materialId    String
+  material      Material    @relation(fields: [materialId], references: [id])
+  quantity      Int
+  isReplacement Boolean     @default(false)
+  caNumber      String?     // CA at time of delivery
+  
+  assignment    Assignment?
+
+  @@index([deliveryId])
+  @@index([materialId])
+}
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id])
+  action       String      // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, EXPORT, IMPORT, STOCK_MOVEMENT
+  entity       String?     // Employee, Material, Assignment, Document, etc.
+  entityId     String?
+  details      String?     @db.Text // Human readable summary
+  oldValue     Json?       // Snapshot before change
+  newValue     Json?       // Snapshot after change
+  metadata     Json?       // Additional context (IP, coordinates, batch info)
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime    @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
