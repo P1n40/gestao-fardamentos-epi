@@ -1,6 +1,17 @@
 "use client";
 
-import { Edit2, FileSpreadsheet, History, ListFilter, Package, Plus, PlusCircle, PowerOff, Search } from "lucide-react";
+import {
+  Edit2,
+  FileSpreadsheet,
+  History,
+  ListFilter,
+  Package,
+  Plus,
+  PlusCircle,
+  PowerOff,
+  Search,
+  ShoppingCart,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,6 +21,7 @@ import { MaterialForm } from "@/components/materials/material-form";
 import { MaterialImportTemplateButton } from "@/components/materials/material-import-template-button";
 import { StockHistorySheet } from "@/components/materials/stock-history-sheet";
 import { StockMovementDialog } from "@/components/materials/stock-movement-dialog";
+import { InitialStockDialog } from "@/components/stock/initial-stock-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,15 +71,23 @@ interface Transaction {
 interface InventoryDashboardProps {
   materials: Material[];
   recentTransactions: Transaction[];
+  canInitializeStock: boolean;
+  stockInitialized: boolean;
 }
 
-export function InventoryDashboard({ materials, recentTransactions }: InventoryDashboardProps) {
+export function InventoryDashboard({
+  materials,
+  recentTransactions,
+  canInitializeStock,
+  stockInitialized,
+}: InventoryDashboardProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [isMovementOpen, setIsMovementOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isInitialStockOpen, setIsInitialStockOpen] = useState(false);
 
   const filteredMaterials = materials.filter(
     (m) =>
@@ -122,11 +142,30 @@ export function InventoryDashboard({ materials, recentTransactions }: InventoryD
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {canInitializeStock && !stockInitialized && (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="gap-2"
+              onClick={() => setIsInitialStockOpen(true)}
+            >
+              <Package className="h-4 w-4" />
+              Entrada Inicial de Materiais
+            </Button>
+          )}
           <Button type="button" size="sm" className="gap-2" onClick={handleCreate}>
             <Plus className="h-4 w-4" />
             Criar material
           </Button>
           <MaterialImportTemplateButton />
+          <Link
+            href="/estoque/planejamento"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            Planejamento
+          </Link>
           <Link
             href="/materiais/importacao"
             className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
@@ -328,6 +367,11 @@ export function InventoryDashboard({ materials, recentTransactions }: InventoryD
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         material={selectedMaterial ?? undefined}
+      />
+      <InitialStockDialog
+        open={isInitialStockOpen}
+        onOpenChange={setIsInitialStockOpen}
+        materials={materials}
       />
     </div>
   );

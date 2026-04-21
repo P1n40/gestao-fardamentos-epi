@@ -1,15 +1,14 @@
 "use client";
 
 import {
+  Briefcase,
   LayoutDashboard,
   LogOut,
   Package,
-  ShieldAlert,
-  Users,
-  User as UserIcon,
   Settings,
-  Briefcase,
-  History,
+  ShieldAlert,
+  User as UserIcon,
+  Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,6 +22,7 @@ import { cn } from "@/lib/utils";
 const links = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Colaboradores", href: "/colaboradores", icon: Users },
+  { name: "Materiais", href: "/materiais", icon: Package },
   { name: "Estoque", href: "/estoque", icon: Package },
   { name: "Entregas", href: "/entregas", icon: ShieldAlert },
 ];
@@ -31,7 +31,6 @@ export function Navbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
 
-  // Hide navbar on login page
   if (pathname === "/auth/login") {
     return null;
   }
@@ -75,32 +74,18 @@ export function Navbar() {
             <span className="hidden md:inline">Cargos</span>
           </Link>
         </RoleGuard>
-        <RoleGuard permissions={["VIEW_AUDIT_LOGS"]}>
-          <Link
-            href="/auditoria"
-            className={cn(
-              "hover:text-primary flex items-center gap-1.5 text-sm font-medium transition-colors",
-              pathname === "/auditoria"
-                ? "text-primary font-semibold"
-                : "text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-100",
-            )}
-          >
-            <History className="h-4 w-4" />
-            <span className="hidden md:inline">Auditoria</span>
-          </Link>
-        </RoleGuard>
         <RoleGuard permissions={["MANAGE_USERS"]}>
           <Link
-            href="/usuarios"
+            href="/configuracoes"
             className={cn(
               "hover:text-primary flex items-center gap-1.5 text-sm font-medium transition-colors",
-              pathname === "/usuarios"
+              pathname.startsWith("/configuracoes")
                 ? "text-primary font-semibold"
                 : "text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-100",
             )}
           >
             <Settings className="h-4 w-4" />
-            <span className="hidden md:inline">Usuários</span>
+            <span className="hidden md:inline">Configurações</span>
           </Link>
         </RoleGuard>
       </div>

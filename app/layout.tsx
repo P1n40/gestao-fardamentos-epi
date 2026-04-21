@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist } from "next/font/google";
 
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { Navbar } from "@/components/shared/navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <TooltipProvider>
             <Navbar />
+            <BackToHomeButton />
             {children}
             <Toaster />
           </TooltipProvider>

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
+import { ensureDefaultAccessProfiles } from "@/lib/rbac";
 import { UserRoleSchema } from "@/types/schemas";
 
 export async function toggleUserStatus(userId: string) {
@@ -76,9 +77,18 @@ export async function updateUserRole(userId: string, newRole: unknown) {
     throw new Error("Voce nao pode alterar o seu proprio perfil de acesso.");
   }
 
+  await ensureDefaultAccessProfiles();
+
   const updatedUser = await prisma.user.update({
     where: { id: userId },
-    data: { role: parsedRole.data },
+    data: {
+      role: parsedRole.data,
+      profile: {
+        connect: {
+          role: parsedRole.data,
+        },
+      },
+    },
   });
 
   await logAudit({
@@ -86,8 +96,8 @@ export async function updateUserRole(userId: string, newRole: unknown) {
     action: "UPDATE",
     entity: "User",
     entityId: userId,
-    oldValue: { role: user.role },
-    newValue: { role: updatedUser.role },
+    oldValue: { role: user.role, profileId: user.profileId },
+    newValue: { role: updatedUser.role, profileId: updatedUser.profileId },
   });
 
   revalidatePath("/usuarios");

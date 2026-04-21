@@ -106,6 +106,28 @@ export const StockMovementSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+export const ExplicitConfirmationSchema = z.object({
+  confirmation: z.literal("CONFIRMAR", {
+    error: "Digite CONFIRMAR para prosseguir.",
+  }),
+  reason: z.string().trim().min(10, "Informe um motivo com pelo menos 10 caracteres."),
+});
+
+export const InitialStockItemSchema = z.object({
+  materialId: z.string().min(1, "O material é obrigatório"),
+  quantity: z.coerce.number().int().positive("A quantidade inicial deve ser positiva"),
+  unit: z.string().trim().min(1, "A unidade é obrigatória"),
+  notes: z.string().trim().optional(),
+});
+
+export const InitialStockSchema = z.object({
+  confirmation: z.literal("CONFIRMAR", {
+    error: "Digite CONFIRMAR para prosseguir.",
+  }),
+  reason: z.string().trim().min(10, "Informe um motivo com pelo menos 10 caracteres."),
+  items: z.array(InitialStockItemSchema).min(1, "Informe pelo menos um material."),
+});
+
 export const DocumentSchema = z.object({
   type: z.enum(["UNIFORM", "PPE"]),
   employeeId: z.string().min(1, "O colaborador é obrigatório"),

@@ -2,9 +2,10 @@ import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
-import { authOptions } from "./auth-options";
 import { logAudit } from "./audit";
-import { Permission, hasPermission } from "./auth-utils";
+import { authOptions } from "./auth-options";
+import { Permission } from "./auth-utils";
+import { userHasPermission } from "./rbac";
 
 async function auditAccessDenied(params: {
   userId?: string;
@@ -41,7 +42,7 @@ export async function requirePermission(permission: Permission, isServerAction =
   const session = await requireAuth();
   const role = session.user.role as UserRole;
 
-  if (!hasPermission(role, permission)) {
+  if (!(await userHasPermission(session.user.id, permission))) {
     await auditAccessDenied({
       userId: session.user.id,
       action: "ACCESS_DENIED_PERMISSION",
@@ -101,7 +102,7 @@ export async function checkApiAuth(permission?: Permission) {
 
   if (permission) {
     const role = session.user.role as UserRole;
-    if (!hasPermission(role, permission)) {
+    if (!(await userHasPermission(session.user.id, permission))) {
       await auditAccessDenied({
         userId: session.user.id,
         action: "API_ACCESS_DENIED",
