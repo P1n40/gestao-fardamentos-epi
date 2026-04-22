@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getActionErrorMessage } from "@/lib/action-errors";
 import {
   Select,
   SelectContent,
@@ -24,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getActionErrorMessage } from "@/lib/action-errors";
 import { createEmployee, updateEmployee } from "@/modules/colaboradores/actions";
 
 interface Position {
@@ -66,7 +66,10 @@ export function EmployeeForm({ employee, positions, open, onOpenChange }: Employ
         : await createEmployee(formData);
 
       if (result.error) {
-        const message = getActionErrorMessage(result.error, "Nao foi possivel salvar o colaborador.");
+        const message = getActionErrorMessage(
+          result.error,
+          "Nao foi possivel salvar o colaborador.",
+        );
         setFeedback(message);
         toast.error(message);
       } else {
@@ -84,7 +87,7 @@ export function EmployeeForm({ employee, positions, open, onOpenChange }: Employ
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{employee ? "Editar Colaborador" : "Cadastrar Colaborador"}</DialogTitle>
@@ -170,7 +173,7 @@ export function EmployeeForm({ employee, positions, open, onOpenChange }: Employ
 
             <div className="border-t pt-2 sm:col-span-2">
               <h4 className="mb-3 text-sm font-medium">Tamanhos / Numeração</h4>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="grid gap-2">
                   <Label htmlFor="shirtSize">Camisa</Label>
                   <Input

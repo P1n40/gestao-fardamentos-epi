@@ -36,21 +36,21 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between border-b bg-white p-4 dark:bg-zinc-950">
-      <div className="flex items-center gap-2 text-lg font-bold">
+    <nav className="sticky top-0 z-50 flex items-center justify-between gap-2 border-b bg-white p-2 sm:p-4 dark:bg-zinc-950">
+      <div className="flex shrink-0 items-center gap-2 text-lg font-bold">
         <Image src="/logo.png" alt="Logo da Empresa" width={92} height={34} />
         <span className="hidden font-sans font-bold tracking-tight lg:inline">
           Gestão Fardamento & EPI
         </span>
       </div>
 
-      <div className="flex items-center gap-4 md:gap-6">
+      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-1 sm:gap-3 md:gap-6">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
             className={cn(
-              "hover:text-primary flex items-center gap-1.5 text-sm font-medium transition-colors",
+              "hover:text-primary flex h-10 shrink-0 items-center gap-1.5 px-2 text-sm font-medium transition-colors",
               pathname === link.href
                 ? "text-primary font-semibold"
                 : "text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-100",
@@ -64,7 +64,7 @@ export function Navbar() {
           <Link
             href="/cargos"
             className={cn(
-              "hover:text-primary flex items-center gap-1.5 text-sm font-medium transition-colors",
+              "hover:text-primary flex h-10 shrink-0 items-center gap-1.5 px-2 text-sm font-medium transition-colors",
               pathname === "/cargos"
                 ? "text-primary font-semibold"
                 : "text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-100",
@@ -78,7 +78,7 @@ export function Navbar() {
           <Link
             href="/configuracoes"
             className={cn(
-              "hover:text-primary flex items-center gap-1.5 text-sm font-medium transition-colors",
+              "hover:text-primary flex h-10 shrink-0 items-center gap-1.5 px-2 text-sm font-medium transition-colors",
               pathname.startsWith("/configuracoes")
                 ? "text-primary font-semibold"
                 : "text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-100",
@@ -90,7 +90,7 @@ export function Navbar() {
         </RoleGuard>
       </div>
 
-      <div className="flex items-center gap-3 border-l pl-4 md:pl-6">
+      <div className="flex shrink-0 items-center gap-2 border-l pl-2 sm:gap-3 sm:pl-4 md:pl-6">
         {session?.user && (
           <div className="flex items-center gap-3">
             <div className="hidden flex-col items-end text-xs sm:flex">

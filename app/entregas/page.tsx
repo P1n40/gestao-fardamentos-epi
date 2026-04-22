@@ -18,18 +18,14 @@ export default async function EntregasPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-7xl space-y-8 p-8">
+    <main className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:p-8">
       <div className="flex flex-col gap-2">
         <div className="text-primary flex items-center gap-2">
-          <Image
-            src="/logo.png"
-            alt="Logo da Empresa"
-            width={80}
-            height={40}
-            className="mr-2"
-          />
+          <Image src="/logo.png" alt="Logo da Empresa" width={80} height={40} className="mr-2" />
           <ShieldAlert className="h-6 w-6" />
-          <h1 className="text-3xl font-bold tracking-tight">Entregas de Fardamento e EPI</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            Entregas de Fardamento e EPI
+          </h1>
         </div>
         <p className="text-muted-foreground">
           Gerencie a entrega de kits, novos itens e substituições. Rastreabilidade completa para RH

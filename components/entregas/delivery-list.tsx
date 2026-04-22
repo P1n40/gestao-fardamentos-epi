@@ -1,6 +1,7 @@
 /* eslint-disable */
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Plus, Search, FileText, ChevronRight, Filter, CheckCircle2, Clock } from "lucide-react";
@@ -18,6 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { fetchDeliveriesQuery } from "@/lib/query/fetchers";
+import { queryKeys } from "@/lib/query/keys";
 
 import { DeliveryFormDialog } from "./delivery-form-dialog";
 
@@ -28,14 +31,16 @@ interface DeliveryListProps {
 }
 
 export function DeliveryList({ initialDeliveries, employees, materials }: DeliveryListProps) {
+  const deliveriesQuery = useQuery({
+    queryKey: queryKeys.deliveries({ limit: 50 }),
+    queryFn: () => fetchDeliveriesQuery({ limit: 50 }),
+    initialData: initialDeliveries,
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"ALL" | "UNIFORM" | "PPE">("ALL");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const filteredDeliveries = (
-    initialDeliveries as // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any[]
-  ).filter((d) => {
+  const filteredDeliveries = (deliveriesQuery.data as any[]).filter((d) => {
     const matchesSearch =
       d.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.employee.documentId.includes(searchTerm);
@@ -46,7 +51,7 @@ export function DeliveryList({ initialDeliveries, employees, materials }: Delive
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full sm:w-72">
           <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-zinc-500" />
           <Input
             placeholder="Buscar por colaborador ou CPF..."
@@ -56,7 +61,7 @@ export function DeliveryList({ initialDeliveries, employees, materials }: Delive
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <div className="flex items-center gap-1 overflow-hidden rounded-md border">
             <Button
               variant={filterType === "ALL" ? "secondary" : "ghost"}
@@ -84,7 +89,7 @@ export function DeliveryList({ initialDeliveries, employees, materials }: Delive
             </Button>
           </div>
 
-          <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+          <Button onClick={() => setIsDialogOpen(true)} className="w-full gap-2 sm:w-auto">
             <Plus className="h-4 w-4" />
             Nova Entrega
           </Button>
@@ -97,7 +102,7 @@ export function DeliveryList({ initialDeliveries, employees, materials }: Delive
             <div
               className={`h-1 w-full ${delivery.type === "UNIFORM" ? "bg-blue-500" : "bg-orange-500"}`}
             />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-col items-start justify-between gap-3 space-y-0 pb-2 sm:flex-row sm:items-center">
               <div className="flex items-center gap-3">
                 <div className="rounded-full bg-zinc-100 p-2">
                   <FileText className="h-5 w-5 text-zinc-600" />
@@ -106,7 +111,7 @@ export function DeliveryList({ initialDeliveries, employees, materials }: Delive
                   <CardTitle className="text-lg">
                     Entrega #{delivery.id.slice(-6).toUpperCase()}
                   </CardTitle>
-                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                  <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
                     <span>
                       Colaborador: <strong>{delivery.employee.name}</strong>
                     </span>
@@ -117,7 +122,7 @@ export function DeliveryList({ initialDeliveries, employees, materials }: Delive
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge
                   variant={delivery.type === "UNIFORM" ? "default" : "secondary"}
                   className={delivery.type === "PPE" ? "bg-orange-100 text-orange-700" : ""}
@@ -151,38 +156,39 @@ export function DeliveryList({ initialDeliveries, employees, materials }: Delive
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       (delivery as any).items.map((item: any) => (
                         <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.material.name}</TableCell>
-                        <TableCell className="font-mono text-xs text-zinc-500">
-                          {item.caNumber || "-"}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {item.quantity} {item.material.unit}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {item.isReplacement ? (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] tracking-wider uppercase"
-                            >
-                              Substituição
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="ghost"
-                              className="bg-zinc-50 text-[10px] tracking-wider uppercase"
-                            >
-                              Novo
-                            </Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          <TableCell className="font-medium">{item.material.name}</TableCell>
+                          <TableCell className="font-mono text-xs text-zinc-500">
+                            {item.caNumber || "-"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {item.quantity} {item.material.unit}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.isReplacement ? (
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] tracking-wider uppercase"
+                              >
+                                Substituição
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="ghost"
+                                className="bg-zinc-50 text-[10px] tracking-wider uppercase"
+                              >
+                                Novo
+                              </Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    }
                   </TableBody>
                 </Table>
               </div>
 
-              <div className="text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-xs">
-                <div className="flex gap-4">
+              <div className="text-muted-foreground mt-4 flex flex-col gap-3 border-t pt-4 text-xs sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap gap-4">
                   <span>Operador: {delivery.user.name}</span>
                   {delivery.notes && <span className="italic">&quot;{delivery.notes}&quot;</span>}
                 </div>
@@ -194,7 +200,7 @@ export function DeliveryList({ initialDeliveries, employees, materials }: Delive
                   }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ring-offset-background focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground inline-flex h-7 items-center justify-center gap-1 rounded-md px-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+                  className="ring-offset-background focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground inline-flex h-8 w-full items-center justify-center gap-1 rounded-md px-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 sm:h-7 sm:w-auto"
                 >
                   {delivery.type === "PPE" && delivery.document
                     ? `Reimprimir Ficha v${delivery.document.version}`

@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Save } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { queryKeys } from "@/lib/query/keys";
 import { addStockMovement } from "@/modules/estoque/actions";
 
 interface StockMovementDialogProps {
@@ -41,6 +43,7 @@ export function StockMovementDialog({
   open,
   onOpenChange,
 }: StockMovementDialogProps) {
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [type, setType] = useState<"INPUT" | "OUTPUT" | "ADJUSTMENT">("INPUT");
   const [quantity, setQuantity] = useState("1");
@@ -89,6 +92,10 @@ export function StockMovementDialog({
       }
 
       toast.success("Movimentacao registrada com sucesso!");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.stockOverview() }),
+        queryClient.invalidateQueries({ queryKey: ["materials"] }),
+      ]);
       onOpenChange(false);
       setQuantity("1");
       setReason("");
@@ -188,7 +195,9 @@ export function StockMovementDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Processando..." : (
+              {isPending ? (
+                "Processando..."
+              ) : (
                 <>
                   <Save className="mr-2 h-4 w-4" />
                   Registrar

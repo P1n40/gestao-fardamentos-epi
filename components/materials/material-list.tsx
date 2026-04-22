@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit2, Filter, History, Plus, Power, PowerOff, Repeat, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -23,6 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { fetchMaterialsQuery } from "@/lib/query/fetchers";
+import { queryKeys } from "@/lib/query/keys";
 import { toggleMaterialStatus } from "@/modules/estoque/actions";
 
 import { MaterialForm } from "./material-form";
@@ -49,6 +52,12 @@ interface MaterialListProps {
 }
 
 export function MaterialList({ initialMaterials }: MaterialListProps) {
+  const queryClient = useQueryClient();
+  const materialsQuery = useQuery({
+    queryKey: queryKeys.materials({ onlyActive: false }),
+    queryFn: () => fetchMaterialsQuery({ onlyActive: false }),
+    initialData: initialMaterials,
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -56,7 +65,8 @@ export function MaterialList({ initialMaterials }: MaterialListProps) {
   const [isMovementOpen, setIsMovementOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | undefined>();
 
-  const filtered = initialMaterials.filter((m) => {
+  const materials = materialsQuery.data as Material[];
+  const filtered = materials.filter((m) => {
     const matchesSearch =
       m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.sku?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -73,6 +83,10 @@ export function MaterialList({ initialMaterials }: MaterialListProps) {
         toast.error(result.error);
       } else {
         toast.success("Status do material atualizado!");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["materials"] }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.stockOverview() }),
+        ]);
       }
     } catch {
       toast.error("Erro ao alterar status");
@@ -83,7 +97,7 @@ export function MaterialList({ initialMaterials }: MaterialListProps) {
     <div className="space-y-4">
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div className="flex flex-1 flex-col gap-2 sm:flex-row">
-          <div className="relative w-full sm:max-w-xs">
+          <div className="relative w-full sm:w-72">
             <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
             <Input
               placeholder="Pesquisar por nome ou SKU..."
@@ -107,6 +121,7 @@ export function MaterialList({ initialMaterials }: MaterialListProps) {
           </Select>
         </div>
         <Button
+          className="w-full sm:w-auto"
           onClick={() => {
             setSelectedMaterial(undefined);
             setIsFormOpen(true);
@@ -181,81 +196,85 @@ export function MaterialList({ initialMaterials }: MaterialListProps) {
                       {material.active ? "Ativo" : "Inativo"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="space-x-1 text-right">
+                  <TableCell className="text-right">
                     <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedMaterial(material);
-                                setIsMovementOpen(true);
-                              }}
-                            >
-                              <Repeat className="h-4 w-4" />
-                            </Button>
-                          }
-                        />
-                        <TooltipContent>Movimentar Estoque</TooltipContent>
-                      </Tooltip>
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedMaterial(material);
+                                  setIsMovementOpen(true);
+                                }}
+                              >
+                                <Repeat className="h-4 w-4" />
+                              </Button>
+                            }
+                          />
+                          <TooltipContent>Movimentar Estoque</TooltipContent>
+                        </Tooltip>
 
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedMaterial(material);
-                                setIsHistoryOpen(true);
-                              }}
-                            >
-                              <History className="h-4 w-4" />
-                            </Button>
-                          }
-                        />
-                        <TooltipContent>Ver Histórico</TooltipContent>
-                      </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedMaterial(material);
+                                  setIsHistoryOpen(true);
+                                }}
+                              >
+                                <History className="h-4 w-4" />
+                              </Button>
+                            }
+                          />
+                          <TooltipContent>Ver Histórico</TooltipContent>
+                        </Tooltip>
 
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedMaterial(material);
-                                setIsFormOpen(true);
-                              }}
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                          }
-                        />
-                        <TooltipContent>Editar Material</TooltipContent>
-                      </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedMaterial(material);
+                                  setIsFormOpen(true);
+                                }}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            }
+                          />
+                          <TooltipContent>Editar Material</TooltipContent>
+                        </Tooltip>
 
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleToggleStatus(material.id)}
-                              className={material.active ? "text-amber-600" : "text-green-600"}
-                            >
-                              {material.active ? (
-                                <PowerOff className="h-4 w-4" />
-                              ) : (
-                                <Power className="h-4 w-4" />
-                              )}
-                            </Button>
-                          }
-                        />
-                        <TooltipContent>{material.active ? "Desativar" : "Ativar"}</TooltipContent>
-                      </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleToggleStatus(material.id)}
+                                className={material.active ? "text-amber-600" : "text-green-600"}
+                              >
+                                {material.active ? (
+                                  <PowerOff className="h-4 w-4" />
+                                ) : (
+                                  <Power className="h-4 w-4" />
+                                )}
+                              </Button>
+                            }
+                          />
+                          <TooltipContent>
+                            {material.active ? "Desativar" : "Ativar"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                     </TooltipProvider>
                   </TableCell>
                 </TableRow>

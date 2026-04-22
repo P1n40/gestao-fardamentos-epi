@@ -83,7 +83,7 @@ export function StockHistorySheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[400px] sm:w-[540px]">
+      <SheetContent className="w-[min(calc(100vw-1rem),540px)]">
         <SheetHeader>
           <div className="flex items-center gap-2">
             <History className="text-primary h-5 w-5" />

@@ -23,7 +23,7 @@ export default async function EstoquePage() {
   ]);
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="container mx-auto px-4 py-6 sm:py-8">
       <InventoryDashboard
         materials={materials}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

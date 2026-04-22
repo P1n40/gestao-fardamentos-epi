@@ -4,8 +4,6 @@ import { Pool } from "pg";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 
-import { PERMISSION_DEFINITIONS, ROLE_PERMISSIONS } from "../lib/auth-utils";
-
 dotenv.config({ path: ".env.local" });
 dotenv.config();
 
@@ -67,53 +65,6 @@ async function seedUsers(hashedPassword: string) {
   }
 
   return users.map((user) => user.email);
-}
-
-async function seedAccessProfiles() {
-  const names: Record<UserRole, string> = {
-    ADMIN: "Administrador",
-    RH_ALMOXARIFADO: "RH / Almoxarifado",
-    GESTOR: "Gestor",
-    OPERADOR: "Operador",
-  };
-
-  for (const [role, permissions] of Object.entries(ROLE_PERMISSIONS) as Array<
-    [UserRole, (typeof PERMISSION_DEFINITIONS)[number]["code"][]]
-  >) {
-    const profile = await prisma.accessProfile.upsert({
-      where: { role },
-      update: {
-        name: names[role],
-        active: true,
-      },
-      create: {
-        role,
-        name: names[role],
-        description: `Perfil padrao ${names[role]}`,
-        active: true,
-      },
-    });
-
-    await prisma.profilePermission.deleteMany({ where: { profileId: profile.id } });
-    await prisma.profilePermission.createMany({
-      data: permissions.map((code) => {
-        const definition = PERMISSION_DEFINITIONS.find((item) => item.code === code);
-        return {
-          profileId: profile.id,
-          code,
-          route: definition?.route ?? "/",
-          action: definition?.action ?? "executar",
-          description: definition?.description ?? code,
-        };
-      }),
-      skipDuplicates: true,
-    });
-
-    await prisma.user.updateMany({
-      where: { role, profileId: null },
-      data: { profileId: profile.id },
-    });
-  }
 }
 
 async function seedPositions() {
@@ -366,7 +317,6 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash(DEFAULT_PASSWORD, 10);
   const seededUsers = await seedUsers(hashedPassword);
-  await seedAccessProfiles();
   const positions = await seedPositions();
   const materials = await seedMaterials();
 

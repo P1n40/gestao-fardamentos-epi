@@ -49,7 +49,13 @@ export function MaterialImportTemplateButton({ size = "sm" }: { size?: "sm" | "d
   }
 
   return (
-    <Button type="button" variant="outline" size={size} className="gap-2" onClick={downloadTemplate}>
+    <Button
+      type="button"
+      variant="outline"
+      size={size}
+      className="w-full gap-2 sm:w-auto"
+      onClick={downloadTemplate}
+    >
       <Download className="h-4 w-4" />
       Baixar template
     </Button>

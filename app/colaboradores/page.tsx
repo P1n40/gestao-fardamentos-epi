@@ -38,12 +38,14 @@ export default async function ColaboradoresPage({
   ]);
 
   return (
-    <main className="mx-auto max-w-7xl space-y-8 p-8">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+    <main className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:p-8">
+      <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
         <div className="flex flex-col gap-2">
           <div className="text-primary flex items-center gap-2">
             <Users className="h-6 w-6" />
-            <h1 className="text-3xl font-bold tracking-tight">Gestão de Colaboradores</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Gestão de Colaboradores
+            </h1>
           </div>
           <p className="text-muted-foreground">
             Cadastre e gerencie a base de colaboradores, cargos e tamanhos de uniformes/EPIs.
@@ -55,7 +57,7 @@ export default async function ColaboradoresPage({
             href="/colaboradores/importacao"
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800",
+              "w-full gap-2 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 sm:w-auto",
             )}
           >
             <FileSpreadsheet className="h-4 w-4" />

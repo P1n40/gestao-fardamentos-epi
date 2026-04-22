@@ -1,6 +1,7 @@
 /* eslint-disable */
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Trash2,
@@ -37,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { queryKeys } from "@/lib/query/keys";
 import { cn } from "@/lib/utils";
 import { registerDelivery, fetchKitForEmployee } from "@/modules/entregas/actions";
 
@@ -83,6 +85,7 @@ export function DeliveryFormDialog({
   employees,
   materials,
 }: DeliveryFormDialogProps) {
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState<Step>("EDITING");
   const [isLoadingKit, setIsLoadingKit] = useState(false);
@@ -135,15 +138,13 @@ export function DeliveryFormDialog({
         setFeedback(message);
         toast.info(message);
       } else {
-        const newItems: SelectedItem[] = result.items.map(
-          (item: any) => ({
-            id: Math.random().toString(36).substring(2, 11),
-            materialId: item.materialId,
-            quantity: item.quantity,
-            isReplacement: false,
-            caNumber: item.caNumber || "",
-          }),
-        );
+        const newItems: SelectedItem[] = result.items.map((item: any) => ({
+          id: Math.random().toString(36).substring(2, 11),
+          materialId: item.materialId,
+          quantity: item.quantity,
+          isReplacement: false,
+          caNumber: item.caNumber || "",
+        }));
         setItems(newItems);
         setFeedback(null);
         toast.success(`${newItems.length} itens sugeridos conforme kit do cargo.`);
@@ -242,12 +243,19 @@ export function DeliveryFormDialog({
     startTransition(async () => {
       const result = await registerDelivery(payload);
       if (result.error) {
-        const message = typeof result.error === "string" ? result.error : "Erro ao registrar entrega";
+        const message =
+          typeof result.error === "string" ? result.error : "Erro ao registrar entrega";
         setFeedback(message);
         toast.error(message);
       } else {
         setFeedback(null);
         toast.success("Entrega registrada com sucesso! Transação atômica concluída.");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["deliveries"] }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.stockOverview() }),
+          queryClient.invalidateQueries({ queryKey: ["materials"] }),
+          queryClient.invalidateQueries({ queryKey: ["employees"] }),
+        ]);
         handleOpenChange(false);
       }
     });
@@ -260,12 +268,7 @@ export function DeliveryFormDialog({
       <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col overflow-hidden p-0">
         <DialogHeader className="p-6 pb-2">
           <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="Logo da Empresa"
-              width={60}
-              height={30}
-            />
+            <Image src="/logo.png" alt="Logo da Empresa" width={60} height={30} />
             <div
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-lg",
@@ -312,7 +315,7 @@ export function DeliveryFormDialog({
                   variant="loading"
                 />
               )}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-3">
                   <Label className="text-muted-foreground text-xs font-bold tracking-wider uppercase">
                     Colaborador
@@ -428,13 +431,13 @@ export function DeliveryFormDialog({
                       <div
                         key={item.id}
                         className={cn(
-                          "group relative grid grid-cols-12 items-end gap-3 rounded-xl border p-3 transition-all",
+                          "group relative grid grid-cols-1 items-end gap-3 rounded-xl border p-3 transition-all md:grid-cols-12",
                           isStockInsufficient
                             ? "border-destructive/30 bg-destructive/5"
                             : "border-zinc-100 bg-white hover:border-zinc-200",
                         )}
                       >
-                        <div className="col-span-4 space-y-1.5">
+                        <div className="space-y-1.5 md:col-span-4">
                           <Label className="text-[10px] font-bold text-zinc-400 uppercase">
                             Material
                           </Label>
@@ -454,7 +457,7 @@ export function DeliveryFormDialog({
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="col-span-2 space-y-1.5">
+                        <div className="space-y-1.5 md:col-span-2">
                           <div className="flex items-center justify-between">
                             <Label className="text-[10px] font-bold text-zinc-400 uppercase">
                               Qtd
@@ -473,7 +476,7 @@ export function DeliveryFormDialog({
                             }
                           />
                         </div>
-                        <div className="col-span-2 space-y-1.5">
+                        <div className="space-y-1.5 md:col-span-2">
                           <Label className="text-[10px] font-bold text-zinc-400 uppercase">
                             C.A.
                           </Label>
@@ -484,7 +487,7 @@ export function DeliveryFormDialog({
                             onChange={(e) => updateItem(item.id, "caNumber", e.target.value)}
                           />
                         </div>
-                        <div className="col-span-3 pb-1">
+                        <div className="pb-1 md:col-span-3">
                           <label className="flex cursor-pointer items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase">
                             <input
                               type="checkbox"
@@ -503,7 +506,7 @@ export function DeliveryFormDialog({
                             </div>
                           )}
                         </div>
-                        <div className="col-span-1 flex justify-end pb-1">
+                        <div className="flex justify-end pb-1 md:col-span-1">
                           <Button
                             type="button"
                             variant="ghost"
@@ -563,7 +566,7 @@ export function DeliveryFormDialog({
                 <h4 className="mb-3 text-[10px] font-bold tracking-widest text-blue-500 uppercase">
                   Dados do Destinatário
                 </h4>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-lg font-bold text-zinc-900">{selectedEmployee?.name}</p>
                     <p className="text-xs text-zinc-500">

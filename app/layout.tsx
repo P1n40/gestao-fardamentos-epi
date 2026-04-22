@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist } from "next/font/google";
 
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { AppQueryProvider } from "@/components/providers/query-provider";
 import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { Navbar } from "@/components/shared/navbar";
 import { Toaster } from "@/components/ui/sonner";
@@ -24,12 +25,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={cn("font-sans", geist.variable)}>
       <body className={inter.className}>
         <AuthProvider>
-          <TooltipProvider>
-            <Navbar />
-            <BackToHomeButton />
-            {children}
-            <Toaster />
-          </TooltipProvider>
+          <AppQueryProvider>
+            <TooltipProvider>
+              <Navbar />
+              <BackToHomeButton />
+              {children}
+              <Toaster />
+            </TooltipProvider>
+          </AppQueryProvider>
         </AuthProvider>
       </body>
     </html>

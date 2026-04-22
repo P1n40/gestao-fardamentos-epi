@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Edit2,
   FileSpreadsheet,
@@ -35,6 +36,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { fetchStockOverviewQuery } from "@/lib/query/fetchers";
+import { queryKeys } from "@/lib/query/keys";
 import { cn } from "@/lib/utils";
 import { toggleMaterialStatus } from "@/modules/estoque/actions";
 
@@ -82,6 +85,17 @@ export function InventoryDashboard({
   stockInitialized,
 }: InventoryDashboardProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const stockQuery = useQuery({
+    queryKey: queryKeys.stockOverview(),
+    queryFn: fetchStockOverviewQuery,
+    initialData: {
+      materials,
+      recentTransactions,
+    },
+  });
+  const cachedMaterials = stockQuery.data.materials as Material[];
+  const cachedRecentTransactions = stockQuery.data.recentTransactions as Transaction[];
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [isMovementOpen, setIsMovementOpen] = useState(false);
@@ -89,7 +103,7 @@ export function InventoryDashboard({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isInitialStockOpen, setIsInitialStockOpen] = useState(false);
 
-  const filteredMaterials = materials.filter(
+  const filteredMaterials = cachedMaterials.filter(
     (m) =>
       m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.sku?.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -126,6 +140,10 @@ export function InventoryDashboard({
       }
 
       toast.success("Material inativado com histórico preservado.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.stockOverview() }),
+        queryClient.invalidateQueries({ queryKey: ["materials"] }),
+      ]);
       router.refresh();
     } catch {
       toast.error("Erro ao inativar material.");
@@ -136,7 +154,7 @@ export function InventoryDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Gestão de Estoque</h2>
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Gestão de Estoque</h2>
           <p className="text-muted-foreground">
             Monitore saldos e registre entradas/ajustes manuais.
           </p>
@@ -147,28 +165,34 @@ export function InventoryDashboard({
               type="button"
               size="sm"
               variant="secondary"
-              className="gap-2"
+              className="w-full gap-2 sm:w-auto"
               onClick={() => setIsInitialStockOpen(true)}
             >
               <Package className="h-4 w-4" />
               Entrada Inicial de Materiais
             </Button>
           )}
-          <Button type="button" size="sm" className="gap-2" onClick={handleCreate}>
+          <Button type="button" size="sm" className="w-full gap-2 sm:w-auto" onClick={handleCreate}>
             <Plus className="h-4 w-4" />
             Criar material
           </Button>
           <MaterialImportTemplateButton />
           <Link
             href="/estoque/planejamento"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "w-full gap-2 sm:w-auto",
+            )}
           >
             <ShoppingCart className="h-4 w-4" />
             Planejamento
           </Link>
           <Link
             href="/materiais/importacao"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "w-full gap-2 sm:w-auto",
+            )}
           >
             <FileSpreadsheet className="h-4 w-4" />
             Importar materiais
@@ -183,7 +207,7 @@ export function InventoryDashboard({
             <Package className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{materials.length}</div>
+            <div className="text-2xl font-bold">{cachedMaterials.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -193,7 +217,7 @@ export function InventoryDashboard({
           </CardHeader>
           <CardContent>
             <div className="destructive text-2xl font-bold">
-              {materials.filter((m) => m.stock <= m.minStock).length}
+              {cachedMaterials.filter((m) => m.stock <= m.minStock).length}
             </div>
           </CardContent>
         </Card>
@@ -204,7 +228,7 @@ export function InventoryDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {materials.reduce((acc, m) => acc + m.stock, 0)}
+              {cachedMaterials.reduce((acc, m) => acc + m.stock, 0)}
             </div>
           </CardContent>
         </Card>
@@ -225,12 +249,12 @@ export function InventoryDashboard({
         <TabsContent value="balance">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle>Saldos Atuais</CardTitle>
                   <CardDescription>Visualize o estoque em tempo real.</CardDescription>
                 </div>
-                <div className="relative w-72">
+                <div className="relative w-full sm:w-72">
                   <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
                   <Input
                     placeholder="Pesquisar material..."
@@ -279,7 +303,7 @@ export function InventoryDashboard({
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-1.5 sm:gap-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -339,7 +363,7 @@ export function InventoryDashboard({
               <CardDescription>Trilha de auditoria de todas as entradas e saídas.</CardDescription>
             </CardHeader>
             <CardContent>
-              <GlobalHistoryTable transactions={recentTransactions} />
+              <GlobalHistoryTable transactions={cachedRecentTransactions} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -371,7 +395,7 @@ export function InventoryDashboard({
       <InitialStockDialog
         open={isInitialStockOpen}
         onOpenChange={setIsInitialStockOpen}
-        materials={materials}
+        materials={cachedMaterials}
       />
     </div>
   );

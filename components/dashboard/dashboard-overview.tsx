@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { AlertTriangle, ArrowRight, Package, ShieldAlert, TrendingUp, Users } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { Badge } from "@/components/ui/badge";
@@ -35,8 +35,8 @@ function AggregateReportTable({
             Nenhuma pendencia agregada encontrada para este recorte.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-zinc-200">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto rounded-2xl border border-zinc-200">
+            <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="bg-zinc-50">
                 <tr className="text-xs text-zinc-500">
                   <th className="px-4 py-3 font-medium">

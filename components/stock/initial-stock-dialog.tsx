@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { queryKeys } from "@/lib/query/keys";
 import { initializeStock } from "@/modules/configuracoes/actions";
 
 interface MaterialOption {
@@ -40,6 +42,7 @@ export function InitialStockDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const queryClient = useQueryClient();
   const [items, setItems] = useState<InitialStockItem[]>([
     { materialId: materials[0]?.id ?? "", quantity: 1, unit: materials[0]?.unit ?? "UN" },
   ]);
@@ -84,6 +87,10 @@ export function InitialStockDialog({
       }
 
       toast.success("Entrada inicial de estoque registrada.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.stockOverview() }),
+        queryClient.invalidateQueries({ queryKey: ["materials"] }),
+      ]);
       onOpenChange(false);
     } finally {
       setPending(false);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,7 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getActionErrorMessage } from "@/lib/action-errors";
 import {
   Select,
   SelectContent,
@@ -26,6 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getActionErrorMessage } from "@/lib/action-errors";
+import { queryKeys } from "@/lib/query/keys";
 import { createMaterial, updateMaterial } from "@/modules/estoque/actions";
 
 interface MaterialFormProps {
@@ -47,6 +49,7 @@ interface MaterialFormProps {
 
 export function MaterialForm({ material, open, onOpenChange }: MaterialFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -68,6 +71,10 @@ export function MaterialForm({ material, open, onOpenChange }: MaterialFormProps
         toast.error(message);
       } else {
         toast.success(material ? "Material atualizado!" : "Material criado!");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["materials"] }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.stockOverview() }),
+        ]);
         onOpenChange(false);
         router.refresh();
       }
@@ -82,7 +89,7 @@ export function MaterialForm({ material, open, onOpenChange }: MaterialFormProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[550px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{material ? "Editar Material" : "Novo Material"}</DialogTitle>
