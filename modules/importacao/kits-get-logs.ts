@@ -7,7 +7,9 @@ export async function getRecentKitImportLogs() {
   const logs = await prisma.auditLog.findMany({
     where: {
       action: "IMPORT",
-      entity: "KitBatch",
+      entity: {
+        in: ["KitBatch", "KitTemplateBatch"],
+      },
     },
     orderBy: {
       createdAt: "desc",

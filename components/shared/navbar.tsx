@@ -51,7 +51,11 @@ export function Navbar() {
             href={link.href}
             className={cn(
               "hover:text-primary flex h-10 shrink-0 items-center gap-1.5 px-2 text-sm font-medium transition-colors",
-              pathname === link.href
+              (
+                link.href === "/materiais"
+                  ? pathname.startsWith("/materiais")
+                  : pathname === link.href
+              )
                 ? "text-primary font-semibold"
                 : "text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-100",
             )}

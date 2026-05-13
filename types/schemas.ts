@@ -15,6 +15,35 @@ export const MaterialSchema = z.object({
 
 export const UserRoleSchema = z.nativeEnum(UserRole);
 
+const optionalPasswordSchema = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().min(8, "A senha deve ter pelo menos 8 caracteres").optional(),
+);
+
+const activeFromFormSchema = z.preprocess((value) => {
+  if (typeof value === "string") {
+    return value === "true" || value === "on";
+  }
+
+  return value;
+}, z.boolean().default(true));
+
+export const CreateUserSchema = z.object({
+  name: z.string().trim().min(2, "O nome deve ter pelo menos 2 caracteres"),
+  email: z.string().trim().toLowerCase().email("Informe um e-mail valido"),
+  password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres"),
+  role: UserRoleSchema,
+  active: activeFromFormSchema,
+});
+
+export const UpdateUserSchema = z.object({
+  name: z.string().trim().min(2, "O nome deve ter pelo menos 2 caracteres"),
+  email: z.string().trim().toLowerCase().email("Informe um e-mail valido"),
+  password: optionalPasswordSchema,
+  role: UserRoleSchema,
+  active: activeFromFormSchema,
+});
+
 export const DocumentVersionQuerySchema = z.object({
   version: z.coerce.number().int().positive().optional(),
 });
@@ -96,6 +125,25 @@ export const KitRevisionSchema = z.object({
     .date()
     .optional()
     .default(() => new Date()),
+});
+
+export const KitTemplateSchema = z.object({
+  name: z.string().trim().min(2, "O nome deve ter pelo menos 2 caracteres"),
+  description: z.string().trim().optional().nullable(),
+  active: z.boolean().default(true),
+});
+
+export const KitTemplateItemSchema = z.object({
+  templateId: z.string().min(1, "O modelo de kit e obrigatorio"),
+  materialId: z.string().min(1, "O material e obrigatorio"),
+  quantity: z.number().int().positive("A quantidade deve ser positiva"),
+  periodDays: z.number().int().nonnegative().optional().nullable(),
+  mandatory: z.boolean().default(true),
+});
+
+export const KitTemplateLinkSchema = z.object({
+  templateId: z.string().min(1, "O modelo de kit e obrigatorio"),
+  positionId: z.string().min(1, "O cargo e obrigatorio"),
 });
 
 export const StockMovementSchema = z.object({

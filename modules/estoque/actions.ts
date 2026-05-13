@@ -71,7 +71,7 @@ export async function createMaterial(formData: FormData) {
       newValue: material,
     });
 
-    revalidatePath("/materiais");
+    revalidatePath("/materiais/catalogo");
     revalidatePath("/estoque");
     return { success: true };
   } catch (err: any) {
@@ -122,7 +122,7 @@ export async function updateMaterial(id: string, formData: FormData) {
       newValue: material,
     });
 
-    revalidatePath("/materiais");
+    revalidatePath("/materiais/catalogo");
     revalidatePath("/estoque");
     return { success: true };
   } catch (err: any) {
@@ -153,7 +153,7 @@ export async function toggleMaterialStatus(id: string) {
       newValue: { active: material.active },
     });
 
-    revalidatePath("/materiais");
+    revalidatePath("/materiais/catalogo");
     revalidatePath("/estoque");
     return { success: true };
   } catch (err: any) {
@@ -183,7 +183,7 @@ export async function addStockMovement(formData: FormData) {
   try {
     await recordStockMovement(validatedData.data, userId);
 
-    revalidatePath("/materiais");
+    revalidatePath("/materiais/catalogo");
     revalidatePath("/estoque"); // Assuming we have or will have this path
     return { success: true };
   } catch (err: any) {

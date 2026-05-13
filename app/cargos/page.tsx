@@ -27,7 +27,7 @@ export default async function CargosPage() {
           </div>
 
           <Link
-            href="/cargos/importacao"
+            href="/materiais/kits/importacao"
             className={cn(buttonVariants({ variant: "outline" }), "gap-2")}
           >
             <FileSpreadsheet className="h-4 w-4" />

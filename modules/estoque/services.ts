@@ -516,7 +516,7 @@ export async function getMaterials(onlyActive = false) {
       active: true,
       createdAt: true,
     },
-    orderBy: { name: "asc" },
+    orderBy: [{ name: "asc" }, { size: "asc" }, { sku: "asc" }],
   });
 }
 

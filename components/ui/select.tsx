@@ -4,7 +4,73 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Select = SelectPrimitive.Root;
+type SelectLabelRegistry = {
+  getLabel: (value: unknown) => React.ReactNode | undefined;
+  registerLabel: (value: unknown, label: React.ReactNode) => () => void;
+};
+
+const SelectLabelRegistryContext = React.createContext<SelectLabelRegistry | null>(null);
+
+function getSelectValueKey(value: unknown) {
+  return typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+    ? String(value)
+    : null;
+}
+
+function getTextFromNode(node: React.ReactNode): string {
+  if (typeof node === "string" || typeof node === "number" || typeof node === "boolean") {
+    return String(node);
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(getTextFromNode).join("");
+  }
+
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) {
+    return getTextFromNode(node.props.children);
+  }
+
+  return "";
+}
+
+function Select<Value, Multiple extends boolean | undefined = false>(
+  props: SelectPrimitive.Root.Props<Value, Multiple>,
+) {
+  const labelsRef = React.useRef(new Map<string, React.ReactNode>());
+  const [, forceUpdate] = React.useReducer((value: number) => value + 1, 0);
+
+  const registry = React.useMemo<SelectLabelRegistry>(
+    () => ({
+      getLabel(value) {
+        const key = getSelectValueKey(value);
+        return key ? labelsRef.current.get(key) : undefined;
+      },
+      registerLabel(value, label) {
+        const key = getSelectValueKey(value);
+        if (!key) {
+          return () => {};
+        }
+
+        labelsRef.current.set(key, label);
+        forceUpdate();
+
+        return () => {
+          if (labelsRef.current.get(key) === label) {
+            labelsRef.current.delete(key);
+            forceUpdate();
+          }
+        };
+      },
+    }),
+    [],
+  );
+
+  return (
+    <SelectLabelRegistryContext.Provider value={registry}>
+      <SelectPrimitive.Root {...props} />
+    </SelectLabelRegistryContext.Provider>
+  );
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -16,13 +82,30 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   );
 }
 
-function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+function SelectValue({ className, children, placeholder, ...props }: SelectPrimitive.Value.Props) {
+  const registry = React.useContext(SelectLabelRegistryContext);
+
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
       className={cn("flex flex-1 text-left", className)}
+      placeholder={placeholder}
       {...props}
-    />
+    >
+      {children ??
+        ((value) => {
+          const label = registry?.getLabel(value);
+          if (label !== undefined) {
+            return label;
+          }
+
+          if (value == null || value === "") {
+            return placeholder;
+          }
+
+          return String(value);
+        })}
+    </SelectPrimitive.Value>
   );
 }
 
@@ -104,10 +187,19 @@ function SelectLabel({ className, ...props }: SelectPrimitive.GroupLabel.Props) 
   );
 }
 
-function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Props) {
+function SelectItem({ className, children, label, value, ...props }: SelectPrimitive.Item.Props) {
+  const registry = React.useContext(SelectLabelRegistryContext);
+  const resolvedLabel = label ?? getTextFromNode(children);
+
+  React.useEffect(() => {
+    return registry?.registerLabel(value, resolvedLabel);
+  }, [registry, resolvedLabel, value]);
+
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
+      value={value}
+      label={resolvedLabel}
       className={cn(
         "focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className,

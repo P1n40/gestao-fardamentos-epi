@@ -148,7 +148,9 @@ export function KitImportWizard() {
       (field) => field.required && (!mappings[field.key] || mappings[field.key] === "SKIP"),
     );
     if (missing.length > 0) {
-      toast.error(`Mapeie os campos obrigatorios: ${missing.map((field) => field.label).join(", ")}`);
+      toast.error(
+        `Mapeie os campos obrigatorios: ${missing.map((field) => field.label).join(", ")}`,
+      );
       return;
     }
 
@@ -255,8 +257,8 @@ export function KitImportWizard() {
               </Button>
             </div>
             <p className="text-xs text-zinc-500">
-              Template sugerido: Cargo, Inicio da Vigencia, Observacoes da Revisao, SKU do
-              Material, Nome do Material, Tamanho, Quantidade, Periodicidade Dias e Obrigatorio.
+              Template sugerido: Cargo, Inicio da Vigencia, Observacoes da Revisao, SKU do Material,
+              Nome do Material, Tamanho, Quantidade, Periodicidade Dias e Obrigatorio.
             </p>
           </CardContent>
         </Card>
@@ -287,7 +289,8 @@ export function KitImportWizard() {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-medium">
-                          {field.label} {field.required && <span className="text-destructive">*</span>}
+                          {field.label}{" "}
+                          {field.required && <span className="text-destructive">*</span>}
                         </span>
                         <Badge
                           variant="outline"
@@ -449,13 +452,13 @@ export function KitImportWizard() {
           <Card>
             <CardFooter className="flex-col gap-3 py-6">
               <Link
-                href="/cargos"
+                href="/materiais/kits"
                 className={cn(buttonVariants({ variant: "default" }), "w-full sm:w-[240px]")}
               >
                 Concluir e voltar
               </Link>
               <Link
-                href="/cargos/importacao/historico"
+                href="/materiais/kits/importacao/historico"
                 className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-2")}
               >
                 <History className="h-4 w-4" />

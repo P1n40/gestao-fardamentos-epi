@@ -79,7 +79,7 @@ export const PERMISSION_DEFINITIONS: Array<{
   },
   {
     code: "MANAGE_MATERIALS",
-    route: "/estoque",
+    route: "/materiais/catalogo",
     action: "editar",
     description: "Gerenciar materiais e estoque",
   },
@@ -174,6 +174,8 @@ const PATH_PERMISSION_RULES: Array<{
   { prefix: "/auditoria", permission: "VIEW_AUDIT_LOGS" },
   { prefix: "/cargos", permission: "MANAGE_POSITIONS" },
   { prefix: "/colaboradores", permission: "MANAGE_EMPLOYEES" },
+  { prefix: "/materiais/kits", permission: "MANAGE_POSITIONS" },
+  { prefix: "/materiais/catalogo", permission: "MANAGE_MATERIALS" },
   { prefix: "/materiais", permission: "MANAGE_MATERIALS" },
   { prefix: "/estoque", permission: "MANAGE_MATERIALS" },
   { prefix: "/entregas", permission: "MANAGE_DELIVERIES" },
@@ -195,6 +197,10 @@ export function canAccessPath(role: UserRole, path: string): boolean {
 
   if (path.startsWith("/admin")) {
     return false;
+  }
+
+  if (path === "/materiais") {
+    return hasPermission(role, "MANAGE_MATERIALS") || hasPermission(role, "MANAGE_POSITIONS");
   }
 
   const requiredPermission = getRequiredPermissionForPath(path);

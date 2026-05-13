@@ -68,7 +68,8 @@ function buildMaterialDiff(params: {
   if (existingRecord.name !== data.name) diff.push(`Nome: ${existingRecord.name} -> ${data.name}`);
   if (existingRecord.category !== data.category)
     diff.push(`Categoria: ${existingRecord.category} -> ${data.category}`);
-  if (existingRecord.unit !== data.unit) diff.push(`Unidade: ${existingRecord.unit} -> ${data.unit}`);
+  if (existingRecord.unit !== data.unit)
+    diff.push(`Unidade: ${existingRecord.unit} -> ${data.unit}`);
   if ((existingRecord.size ?? "") !== (data.size ?? ""))
     diff.push(`Tamanho: ${existingRecord.size ?? "-"} -> ${data.size ?? "-"}`);
   if ((existingRecord.sku ?? "") !== (data.sku ?? ""))
@@ -80,7 +81,9 @@ function buildMaterialDiff(params: {
   if ((existingRecord.description ?? "") !== (data.description ?? ""))
     diff.push(`Descricao atualizada`);
   if (existingRecord.active !== data.active)
-    diff.push(`Status: ${existingRecord.active ? "Ativo" : "Inativo"} -> ${data.active ? "Ativo" : "Inativo"}`);
+    diff.push(
+      `Status: ${existingRecord.active ? "Ativo" : "Inativo"} -> ${data.active ? "Ativo" : "Inativo"}`,
+    );
   if (existingRecord.stock !== data.stock)
     diff.push(`Saldo alvo: ${existingRecord.stock} -> ${data.stock}`);
 
@@ -139,7 +142,9 @@ async function applyMaterialImportRow(params: {
           quantity: stockDelta,
           balanceBefore: previousStock,
           balanceAfter: data.stock,
-          reason: existingRecord ? "Ajuste por importacao em massa" : "Saldo inicial por importacao em massa",
+          reason: existingRecord
+            ? "Ajuste por importacao em massa"
+            : "Saldo inicial por importacao em massa",
           userId,
         },
       });
@@ -186,13 +191,12 @@ export async function validateMaterialImportAction(
       continue;
     }
 
-    const diff =
-      result.reconciliation.existingRecord
-        ? buildMaterialDiff({
-            existingRecord: result.reconciliation.existingRecord,
-            data: result.data,
-          })
-        : undefined;
+    const diff = result.reconciliation.existingRecord
+      ? buildMaterialDiff({
+          existingRecord: result.reconciliation.existingRecord,
+          data: result.data,
+        })
+      : undefined;
 
     const classification: ImportClassification =
       diff && diff.length === 0
@@ -248,13 +252,12 @@ export async function importMaterialsAction(
         continue;
       }
 
-      const diff =
-        result.reconciliation.existingRecord
-          ? buildMaterialDiff({
-              existingRecord: result.reconciliation.existingRecord,
-              data: result.data,
-            })
-          : [];
+      const diff = result.reconciliation.existingRecord
+        ? buildMaterialDiff({
+            existingRecord: result.reconciliation.existingRecord,
+            data: result.data,
+          })
+        : [];
 
       const classification: ImportClassification =
         diff.length === 0 && result.reconciliation.existingRecord
@@ -335,7 +338,7 @@ export async function importMaterialsAction(
     },
   });
 
-  revalidatePath("/materiais");
+  revalidatePath("/materiais/catalogo");
   revalidatePath("/estoque");
   revalidatePath("/dashboard");
 

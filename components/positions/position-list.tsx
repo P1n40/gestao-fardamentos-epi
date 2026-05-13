@@ -129,7 +129,7 @@ export function PositionList({ initialPositions }: PositionListProps) {
                   </TableCell>
                   <TableCell className="space-x-2 text-right">
                     <Link
-                      href={`/cargos/${pos.id}/kit`}
+                      href={`/materiais/kits/${pos.id}`}
                       className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
                       title="Gerenciar Kit"
                     >

@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 import { MaintenanceActions } from "@/components/configuracoes/maintenance-actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requirePermission } from "@/lib/auth-server";
@@ -14,14 +15,17 @@ export default async function MaintenancePage() {
         </p>
       </div>
 
-      <Card className="mb-6 border-amber-300">
+      <Card className="mb-6 border-2 border-amber-500 bg-amber-50">
         <CardHeader>
-          <CardTitle>Atenção operacional</CardTitle>
-          <CardDescription>
+          <CardTitle className="flex items-center gap-2 text-amber-900">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            Atenção operacional
+          </CardTitle>
+          <CardDescription className="text-amber-800">
             Estas ações são irreversíveis no uso do sistema e registram auditoria completa.
           </CardDescription>
         </CardHeader>
-        <CardContent className="text-muted-foreground text-sm">
+        <CardContent className="text-amber-900 text-sm">
           A base de funcionários é zerada por inativação para preservar histórico jurídico. O
           estoque é zerado por ajuste sistêmico, sem excluir movimentações anteriores.
         </CardContent>

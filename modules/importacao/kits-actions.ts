@@ -14,12 +14,7 @@ import {
   buildKitReferenceMaps,
   processKitPipelineRow,
 } from "./kits-pipeline";
-import type {
-  ImportClassification,
-  ImportDetail,
-  ImportSummary,
-  KitImportRow,
-} from "./schemas";
+import type { ImportClassification, ImportDetail, ImportSummary, KitImportRow } from "./schemas";
 
 type ResolvedKitRow = {
   row: number;
@@ -304,31 +299,30 @@ async function applyKitGroupImport(group: KitGroupPlan, userId: string) {
       );
     }
 
-    const revision =
-      group.existingDraft
-        ? await tx.kitRevision.update({
-            where: { id: group.existingDraft.id },
-            data: {
-              notes: group.notes,
-            },
-          })
-        : await (async () => {
-            const lastRevision = await tx.kitRevision.findFirst({
-              where: { positionId: group.positionId },
-              orderBy: { version: "desc" },
-              select: { version: true },
-            });
+    const revision = group.existingDraft
+      ? await tx.kitRevision.update({
+          where: { id: group.existingDraft.id },
+          data: {
+            notes: group.notes,
+          },
+        })
+      : await (async () => {
+          const lastRevision = await tx.kitRevision.findFirst({
+            where: { positionId: group.positionId },
+            orderBy: { version: "desc" },
+            select: { version: true },
+          });
 
-            return tx.kitRevision.create({
-              data: {
-                positionId: group.positionId,
-                version: (lastRevision?.version ?? 0) + 1,
-                notes: group.notes,
-                validFrom: group.validFrom,
-                isActive: false,
-              },
-            });
-          })();
+          return tx.kitRevision.create({
+            data: {
+              positionId: group.positionId,
+              version: (lastRevision?.version ?? 0) + 1,
+              notes: group.notes,
+              validFrom: group.validFrom,
+              isActive: false,
+            },
+          });
+        })();
 
     for (const row of group.rows) {
       await tx.kitItem.upsert({
@@ -373,7 +367,10 @@ async function applyKitGroupImport(group: KitGroupPlan, userId: string) {
   });
 }
 
-function buildOrderedSummary(rowsLength: number, detailsByRow: Map<number, ImportDetail>): ImportSummary {
+function buildOrderedSummary(
+  rowsLength: number,
+  detailsByRow: Map<number, ImportDetail>,
+): ImportSummary {
   const details = Array.from({ length: rowsLength }, (_, index) => {
     const rowNumber = index + 1;
     return (
@@ -456,10 +453,14 @@ export async function importKitsAction(
   const userId = session.user.id;
 
   const { summary, validGroups } = await analyzeKitImport(rows, mappings);
-  const detailsByRow = new Map<number, ImportDetail>(summary.details.map((detail) => [detail.row, detail]));
+  const detailsByRow = new Map<number, ImportDetail>(
+    summary.details.map((detail) => [detail.row, detail]),
+  );
 
   for (const group of validGroups) {
-    const groupDetails = group.rows.map((row) => detailsByRow.get(row.row)).filter(Boolean) as ImportDetail[];
+    const groupDetails = group.rows
+      .map((row) => detailsByRow.get(row.row))
+      .filter(Boolean) as ImportDetail[];
     const hasBlockingError = groupDetails.some((detail) => !detail.success);
     if (hasBlockingError) {
       continue;
@@ -505,7 +506,8 @@ export async function importKitsAction(
         error: finalSummary.errorCount,
         create: finalSummary.details.filter((detail) => detail.classification === "CREATE").length,
         update: finalSummary.details.filter((detail) => detail.classification === "UPDATE").length,
-        unchanged: finalSummary.details.filter((detail) => detail.classification === "UNCHANGED").length,
+        unchanged: finalSummary.details.filter((detail) => detail.classification === "UNCHANGED")
+          .length,
       },
       items: finalSummary.details.slice(0, 100).map((detail) => ({
         r: detail.row,
@@ -521,10 +523,15 @@ export async function importKitsAction(
   const touchedPositions = new Set<string>();
   validGroups.forEach((group) => touchedPositions.add(group.positionId));
 
+  revalidatePath("/materiais/kits");
+  revalidatePath("/materiais/kits/importacao");
+  revalidatePath("/materiais/kits/importacao/historico");
   revalidatePath("/cargos");
   revalidatePath("/dashboard");
   revalidatePath("/cargos/importacao");
+  revalidatePath("/cargos/importacao/historico");
   touchedPositions.forEach((positionId) => {
+    revalidatePath(`/materiais/kits/${positionId}`);
     revalidatePath(`/cargos/${positionId}/kit`);
   });
 

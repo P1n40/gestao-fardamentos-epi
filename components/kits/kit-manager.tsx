@@ -54,6 +54,8 @@ export interface Material {
   name: string;
   category: "UNIFORM" | "PPE";
   unit: string;
+  size: string | null;
+  sku: string | null;
 }
 
 export interface KitItem {
@@ -112,6 +114,16 @@ export function KitManager({
   }, [currentRevision]);
 
   const isDraft = currentRevision && !currentRevision.isActive && !currentRevision.validTo;
+
+  const getMaterialVariantLabel = (material: Material) =>
+    `${material.name}${material.size ? ` (${material.size})` : ""} - ${
+      material.category === "UNIFORM" ? "Fardamento" : "EPI"
+    }`;
+
+  const getMaterialDetailLabel = (material: Material) => {
+    const details = [material.size || material.unit, material.sku].filter(Boolean);
+    return details.join(" | ");
+  };
 
   const handleEditItem = (item: KitItem) => {
     setEditingItem(item);
@@ -189,7 +201,7 @@ export function KitManager({
         toast.error(typeof result.error === "string" ? result.error : "Erro ao criar nova versão");
       } else {
         toast.success("Nova versão rascunho criada!");
-        router.push(`/cargos/${positionId}/kit?revisionId=${result.id}`);
+        router.push(`/materiais/kits/${positionId}?revisionId=${result.id}`);
       }
     });
   };
@@ -229,7 +241,7 @@ export function KitManager({
               size="sm"
               onClick={() => {
                 cancelEdit();
-                router.push(`/cargos/${positionId}/kit?revisionId=${rev.id}`);
+                router.push(`/materiais/kits/${positionId}?revisionId=${rev.id}`);
               }}
               className="h-9 min-w-16 transition-all"
             >
@@ -438,7 +450,7 @@ export function KitManager({
                           })
                           .map((m) => (
                             <SelectItem key={m.id} value={m.id}>
-                              {m.name} ({m.category === "UNIFORM" ? "Fardamento" : "EPI"})
+                              {getMaterialVariantLabel(m)}
                             </SelectItem>
                           ))}
                       </SelectContent>
@@ -582,8 +594,8 @@ export function KitManager({
                             <div className="flex flex-col">
                               <span className="font-bold text-zinc-800">{item.material.name}</span>
                               <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground font-mono text-[10px]">
-                                  {item.material.id.slice(0, 8)}
+                                <span className="text-muted-foreground text-xs">
+                                  {getMaterialDetailLabel(item.material)}
                                 </span>
                                 {!item.mandatory && (
                                   <Badge
@@ -697,8 +709,8 @@ export function KitManager({
                             <div className="flex flex-col">
                               <span className="font-bold text-zinc-800">{item.material.name}</span>
                               <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground font-mono text-[10px]">
-                                  {item.material.id.slice(0, 8)}
+                                <span className="text-muted-foreground text-xs">
+                                  {getMaterialDetailLabel(item.material)}
                                 </span>
                                 {!item.mandatory && (
                                   <Badge

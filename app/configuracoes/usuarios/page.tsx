@@ -1,18 +1,10 @@
-import { Badge } from "@/components/ui/badge";
+import { UserManager } from "@/components/configuracoes/user-manager";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { requirePermission } from "@/lib/auth-server";
 import prisma from "@/lib/prisma";
 
 export default async function ConfigUsersPage() {
-  await requirePermission("MANAGE_USERS");
+  const session = await requirePermission("MANAGE_USERS");
 
   const users = await prisma.user.findMany({
     select: {
@@ -31,6 +23,16 @@ export default async function ConfigUsersPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const userItems = users.map((user) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    active: user.active,
+    profileName: user.profile?.name ?? user.role,
+    createdAtLabel: new Date(user.createdAt).toLocaleDateString("pt-BR"),
+  }));
+
   return (
     <main className="mx-auto max-w-7xl p-8">
       <div className="mb-8">
@@ -46,41 +48,7 @@ export default async function ConfigUsersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Perfil</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Criado em</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name || "N/A"}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
-                      {user.profile?.name ?? user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={user.active ? "outline" : "destructive"}
-                      className={user.active ? "border-green-600 text-green-600" : ""}
-                    >
-                      {user.active ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {new Date(user.createdAt).toLocaleDateString("pt-BR")}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <UserManager users={userItems} currentUserId={session.user.id} />
         </CardContent>
       </Card>
     </main>

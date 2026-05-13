@@ -14,6 +14,13 @@ import {
   updateRevisionNotes,
 } from "./services";
 
+function revalidateKitPages(positionId: string) {
+  revalidatePath("/materiais/kits");
+  revalidatePath(`/materiais/kits/${positionId}`);
+  revalidatePath("/cargos");
+  revalidatePath(`/cargos/${positionId}/kit`);
+}
+
 /**
  * Creates a new kit version (cloning if requested).
  */
@@ -42,7 +49,7 @@ export async function createNewKitVersion(formData: FormData) {
       newValue: revision,
     });
 
-    revalidatePath(`/cargos/${positionId}/kit`);
+    revalidateKitPages(positionId);
     return { success: true, id: revision.id };
   } catch (err: any) {
     if (err.message && err.message.includes("Conflito")) {
@@ -71,7 +78,7 @@ export async function publishKitVersion(revisionId: string, positionId: string) 
       newValue: { isActive: true, validFrom: revision.validFrom },
     });
 
-    revalidatePath(`/cargos/${positionId}/kit`);
+    revalidateKitPages(positionId);
     return { success: true };
   } catch (err: any) {
     if (err.message && (err.message.includes("Conflito") || err.message.includes("Impossível"))) {
@@ -90,7 +97,7 @@ export async function updateKitNotes(revisionId: string, positionId: string, not
 
   try {
     await updateRevisionNotes(revisionId, notes);
-    revalidatePath(`/cargos/${positionId}/kit`);
+    revalidateKitPages(positionId);
     return { success: true };
   } catch (err) {
     console.error(err);
@@ -131,7 +138,7 @@ export async function saveKitItem(formData: FormData) {
       newValue: kitItem,
     });
 
-    revalidatePath(`/cargos/${positionId}/kit`);
+    revalidateKitPages(positionId);
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -157,7 +164,7 @@ export async function removeKitItem(id: string, positionId: string) {
       oldValue: kitItem,
     });
 
-    revalidatePath(`/cargos/${positionId}/kit`);
+    revalidateKitPages(positionId);
     return { success: true };
   } catch (err: any) {
     console.error(err);

@@ -151,7 +151,9 @@ export function MaterialImportWizard() {
       (field) => field.required && (!mappings[field.key] || mappings[field.key] === "SKIP"),
     );
     if (missing.length > 0) {
-      toast.error(`Mapeie os campos obrigatórios: ${missing.map((field) => field.label).join(", ")}`);
+      toast.error(
+        `Mapeie os campos obrigatórios: ${missing.map((field) => field.label).join(", ")}`,
+      );
       return;
     }
 
@@ -173,7 +175,10 @@ export function MaterialImportWizard() {
         );
 
         const result = await validateMaterialImportAction(chunk, mappings);
-        const adjustedDetails = result.details.map((detail) => ({ ...detail, row: detail.row + index }));
+        const adjustedDetails = result.details.map((detail) => ({
+          ...detail,
+          row: detail.row + index,
+        }));
         allDetails = [...allDetails, ...adjustedDetails];
         totalSuccess += result.successCount;
         totalError += result.errorCount;
@@ -214,7 +219,10 @@ export function MaterialImportWizard() {
         );
 
         const result = await importMaterialsAction(chunk, mappings);
-        const adjustedDetails = result.details.map((detail) => ({ ...detail, row: detail.row + index }));
+        const adjustedDetails = result.details.map((detail) => ({
+          ...detail,
+          row: detail.row + index,
+        }));
         allDetails = [...allDetails, ...adjustedDetails];
         totalSuccess += result.successCount;
         totalError += result.errorCount;
@@ -286,8 +294,8 @@ export function MaterialImportWizard() {
               </Button>
             </div>
             <p className="text-xs text-zinc-500">
-              Template sugerido: Nome, Categoria, Unidade, Tamanho, SKU, CA, Estoque Mínimo,
-              Estoque Inicial, Descrição, Ativo.
+              Template sugerido: Nome, Categoria, Unidade, Tamanho, SKU, CA, Estoque Mínimo, Estoque
+              Inicial, Descrição, Ativo.
             </p>
           </CardContent>
         </Card>
@@ -318,7 +326,8 @@ export function MaterialImportWizard() {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-medium">
-                          {field.label} {field.required && <span className="text-destructive">*</span>}
+                          {field.label}{" "}
+                          {field.required && <span className="text-destructive">*</span>}
                         </span>
                         <Badge
                           variant="outline"
@@ -331,7 +340,9 @@ export function MaterialImportWizard() {
                     <TableCell>
                       <Select
                         value={mappings[field.key] || ""}
-                        onValueChange={(value) => setMappings((current) => ({ ...current, [field.key]: value || "" }))}
+                        onValueChange={(value) =>
+                          setMappings((current) => ({ ...current, [field.key]: value || "" }))
+                        }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Ignorar campo" />
@@ -476,7 +487,7 @@ export function MaterialImportWizard() {
           <Card>
             <CardFooter className="flex-col gap-3 py-6">
               <Link
-                href="/materiais"
+                href="/materiais/catalogo"
                 className={cn(buttonVariants({ variant: "default" }), "w-full sm:w-[240px]")}
               >
                 Concluir e voltar
